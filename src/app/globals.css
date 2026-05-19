@@ -133,8 +133,27 @@ html {
 }
 
 body {
+  font-family: var(--font-nunito), system-ui, sans-serif;
   background:
     radial-gradient(circle at top left, rgba(255, 237, 213, 0.7), transparent 30%),
     radial-gradient(circle at top right, rgba(219, 234, 254, 0.7), transparent 30%),
     #ffffff;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+a,
+span,
+button,
+input,
+textarea,
+select,
+label,
+[data-slot="card-title"] {
+  font-family: var(--font-nunito), system-ui, sans-serif;
 }
