@@ -10,13 +10,23 @@ import {
   Baby,
   BookOpen,
   Check,
+  CreditCard,
   Heart,
+  LucideIcon,
   PartyPopper,
   Rocket,
   ShieldCheck,
   Sparkles,
   Wand2,
 } from "lucide-react";
+
+import type {
+  ChildGender,
+  ChildProfile,
+  StoryCreationInput,
+  StoryMoral,
+  StoryTheme,
+} from "@/types/story";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,6 +42,12 @@ import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 
+type MockStoryPreview = {
+  title: string;
+  shortDescription: string;
+  previewText: string;
+};
+
 const storySchema = z.object({
   childName: z
     .string()
@@ -43,7 +59,7 @@ const storySchema = z.object({
     .refine((value) => Number(value) >= 1 && Number(value) <= 12, {
       message: "Das Alter sollte zwischen 1 und 12 Jahren liegen.",
     }),
-  gender: z.string().optional(),
+  gender: z.enum(["girl", "boy", "diverse", "not_specified"]),
   interests: z
     .string()
     .min(3, "Bitte beschreibe mindestens ein Interesse.")
@@ -60,8 +76,22 @@ const storySchema = z.object({
     .string()
     .min(2, "Bitte gib ein Lieblingshobby ein.")
     .max(60, "Bitte halte das Hobby kürzer."),
-  storyType: z.string().min(1, "Bitte wähle eine Art von Märchen aus."),
-  moral: z.string().min(1, "Bitte wähle eine Botschaft aus."),
+  storyType: z.enum([
+    "space_adventure",
+    "magical_animals",
+    "superhero",
+    "birthday",
+    "bedtime",
+    "courage",
+  ]),
+  moral: z.enum([
+    "friendship",
+    "bravery",
+    "sharing",
+    "confidence",
+    "family",
+    "creativity",
+  ]),
   dedication: z
     .string()
     .max(300, "Die Widmung darf maximal 300 Zeichen lang sein.")
@@ -73,13 +103,13 @@ type StoryFormValues = z.infer<typeof storySchema>;
 const defaultValues: StoryFormValues = {
   childName: "",
   childAge: "",
-  gender: "",
+  gender: "not_specified",
   interests: "",
   favoriteAnimal: "",
   favoriteColor: "",
   favoriteHobby: "",
-  storyType: "",
-  moral: "",
+  storyType: "space_adventure",
+  moral: "friendship",
   dedication: "",
 };
 
@@ -127,95 +157,177 @@ const steps = [
   },
 ];
 
-const storyTypes = [
+const storyTypes: {
+  value: StoryTheme;
+  label: string;
+  description: string;
+  icon: LucideIcon;
+}[] = [
   {
-    value: "Aventura espacial",
+    value: "space_adventure",
     label: "Weltraumabenteuer",
     description: "Planeten, Sterne und eine große Reise durch das Universum.",
     icon: Rocket,
   },
   {
-    value: "Animales mágicos",
+    value: "magical_animals",
     label: "Magische Tiere",
     description: "Sprechende Tiere, ein verzauberter Wald und kleine Wunder.",
     icon: Sparkles,
   },
   {
-    value: "Superhéroe",
+    value: "superhero",
     label: "Superheld",
     description: "Das Kind entdeckt besondere Kräfte und hilft anderen.",
     icon: ShieldCheck,
   },
   {
-    value: "Cumpleaños",
+    value: "birthday",
     label: "Geburtstag",
     description: "Ein besonderer Tag voller Überraschungen und Freude.",
     icon: PartyPopper,
   },
   {
-    value: "Dormir tranquilo",
+    value: "bedtime",
     label: "Ruhig einschlafen",
     description: "Eine sanfte Geschichte zum Entspannen vor dem Schlafen.",
     icon: Heart,
   },
   {
-    value: "Aprender a ser valiente",
+    value: "courage",
     label: "Mutig werden",
     description: "Eine Geschichte über Selbstvertrauen und kleine mutige Schritte.",
     icon: Wand2,
   },
 ];
 
-const morals = [
+const morals: {
+  value: StoryMoral;
+  label: string;
+  storyWord: string;
+}[] = [
   {
-    value: "Amistad",
+    value: "friendship",
     label: "Freundschaft",
+    storyWord: "wahre Freundschaft",
   },
   {
-    value: "Valentía",
+    value: "bravery",
     label: "Mut",
+    storyWord: "Mut",
   },
   {
-    value: "Compartir",
+    value: "sharing",
     label: "Teilen",
+    storyWord: "Teilen",
   },
   {
-    value: "Confianza",
+    value: "confidence",
     label: "Vertrauen",
+    storyWord: "Vertrauen",
   },
   {
-    value: "Familia",
+    value: "family",
     label: "Familie",
+    storyWord: "Familie",
   },
   {
-    value: "Creatividad",
+    value: "creativity",
     label: "Kreativität",
+    storyWord: "Kreativität",
   },
 ];
 
-const genders = [
+const genders: {
+  value: ChildGender;
+  label: string;
+}[] = [
   {
-    value: "",
+    value: "not_specified",
     label: "Keine Angabe",
   },
   {
-    value: "Mädchen",
+    value: "girl",
     label: "Mädchen",
   },
   {
-    value: "Junge",
+    value: "boy",
     label: "Junge",
   },
   {
-    value: "Divers",
+    value: "diverse",
     label: "Divers",
   },
 ];
 
+function getThemeLabel(theme: StoryTheme) {
+  return storyTypes.find((type) => type.value === theme)?.label ?? "Abenteuer";
+}
+
+function getMoralLabel(moral: StoryMoral) {
+  return morals.find((item) => item.value === moral)?.label ?? "Mut";
+}
+
+function getMoralStoryWord(moral: StoryMoral) {
+  return morals.find((item) => item.value === moral)?.storyWord ?? "Mut";
+}
+
+function generateMockStoryPreview(data: StoryCreationInput): MockStoryPreview {
+  const childName = data.child.name;
+  const childAge = data.child.age;
+  const interests = data.child.interests;
+  const favoriteAnimal = data.child.favoriteAnimal;
+  const favoriteColor = data.child.favoriteColor;
+  const favoriteHobby = data.child.favoriteHobby;
+  const themeLabel = getThemeLabel(data.theme);
+  const moralLabel = getMoralLabel(data.moral);
+  const moralStoryWord = getMoralStoryWord(data.moral);
+
+  const themeOpenings: Record<StoryTheme, string> = {
+    space_adventure: `${childName} hatte schon immer davon geträumt, weiter als bis zu den Sternen zu reisen. Eines Abends, während ${childName} aus dem Fenster schaute, landete leise eine kleine Raumkapsel im Garten.`,
+    magical_animals: `${childName} hörte eines Morgens ein leises Flüstern hinter den Bäumen. Als ${childName} näherkam, stand dort ein magisches ${favoriteAnimal}, dessen Augen wie kleine Sterne funkelten.`,
+    superhero: `${childName} bemerkte an einem ganz gewöhnlichen Tag, dass etwas Besonderes geschah. Immer wenn jemand Hilfe brauchte, begann ein kleines Licht in ${favoriteColor} zu leuchten.`,
+    birthday: `An ${childName}s besonderem Tag war die Luft voller Vorfreude. Doch als plötzlich ein geheimnisvoller Brief auf dem Geburtstagstisch lag, begann ein Abenteuer, das niemand erwartet hatte.`,
+    bedtime: `Als der Abend ruhig wurde und die Sterne langsam am Himmel erschienen, kuschelte sich ${childName} gemütlich ein. Da öffnete sich im Traum eine sanfte Tür zu einem friedlichen Wunderland.`,
+    courage: `${childName} stand vor einer kleinen Herausforderung, die sich zuerst riesengroß anfühlte. Doch tief im Herzen spürte ${childName}, dass irgendwo ein mutiger Funke wartete.`,
+  };
+
+  const themeTitles: Record<StoryTheme, string> = {
+    space_adventure: `${childName} und die Reise zu den Sternen`,
+    magical_animals: `${childName} und das magische ${favoriteAnimal}`,
+    superhero: `${childName} und das geheime Superlicht`,
+    birthday: `${childName} und der wundersame Geburtstag`,
+    bedtime: `${childName} und der Traum aus Sternenstaub`,
+    courage: `${childName} und der kleine große Mut`,
+  };
+
+  const dedicationText = data.dedication
+    ? `Vor dem ersten Kapitel steht eine liebevolle Widmung: „${data.dedication}”.`
+    : `Diese Geschichte beginnt ohne Widmung, aber mit einem Herzen voller Wärme.`;
+
+  const shortDescription = `Ein personalisiertes ${themeLabel} für ${childName}, ${childAge} Jahre alt. Die Geschichte verbindet ${interests}, ${favoriteHobby} und die Botschaft ${moralLabel}.`;
+
+  const previewText = `${dedicationText}
+
+${themeOpenings[data.theme]}
+
+${childName} nahm allen Mut zusammen und folgte dem geheimnisvollen Zeichen. Schon bald zeigte sich, dass ${interests} nicht einfach nur ein Interesse war, sondern eine besondere Stärke. Mit jedem Schritt wurde die Welt größer, bunter und überraschender.
+
+Auf dem Weg begegnete ${childName} einem freundlichen ${favoriteAnimal}, das eine wichtige Aufgabe hatte. Gemeinsam mussten sie ein Rätsel lösen, bei dem ${favoriteHobby}, Fantasie und ein bisschen Geduld halfen.
+
+Am Ende verstand ${childName}, dass ${moralStoryWord} nicht nur ein Wort ist, sondern etwas, das man fühlen, zeigen und weitergeben kann. Und genau in diesem Moment begann das eigentliche Abenteuer erst richtig...`;
+
+  return {
+    title: themeTitles[data.theme],
+    shortDescription,
+    previewText,
+  };
+}
+
 export function StoryWizard() {
   const [currentStep, setCurrentStep] = useState(1);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [savedData, setSavedData] = useState<StoryFormValues | null>(null);
+  const [preview, setPreview] = useState<MockStoryPreview | null>(null);
+  const [savedData, setSavedData] = useState<StoryCreationInput | null>(null);
 
   const form = useForm<StoryFormValues>({
     resolver: zodResolver(storySchema),
@@ -259,43 +371,45 @@ export function StoryWizard() {
     setCurrentStep((step) => Math.max(step - 1, 1));
   }
 
-  function generatePreview(data: StoryFormValues) {
-    setSavedData(data);
+  function buildStoryInput(data: StoryFormValues): StoryCreationInput {
+    const child: ChildProfile = {
+      name: data.childName,
+      age: Number(data.childAge),
+      gender: data.gender,
+      interests: data.interests,
+      favoriteAnimal: data.favoriteAnimal,
+      favoriteColor: data.favoriteColor,
+      favoriteHobby: data.favoriteHobby,
+    };
 
-    const storyTypeLabel =
-      storyTypes.find((type) => type.value === data.storyType)?.label ??
-      "Abenteuer";
+    return {
+      child,
+      theme: data.storyType,
+      moral: data.moral,
+      dedication: data.dedication,
+    };
+  }
 
-    const moralLabel =
-      morals.find((moral) => moral.value === data.moral)?.label ?? "Mut";
+  function handleGeneratePreview(data: StoryFormValues) {
+    const storyInput = buildStoryInput(data);
+    const mockPreview = generateMockStoryPreview(storyInput);
 
-    const dedicationText = data.dedication
-      ? `Vor der Geschichte steht eine liebevolle Widmung: „${data.dedication}”.`
-      : "Die Geschichte beginnt ohne persönliche Widmung, aber mit viel Wärme.";
-
-    setPreview(
-      `${dedicationText}
-
-Es war einmal ein Kind namens ${data.childName}, ${data.childAge} Jahre alt, das ${data.favoriteColor} liebte und am liebsten ${data.favoriteHobby} machte. Eines Tages erschien ein ${data.favoriteAnimal} mit funkelnden Augen und lud ${data.childName} zu einem besonderen ${storyTypeLabel} ein.
-
-Auf dieser Reise entdeckte ${data.childName}, dass ${data.interests} nicht nur ein Interesse war, sondern eine echte Stärke. Schritt für Schritt lernte ${data.childName}, wie wichtig ${moralLabel} ist.
-
-Und als das Abenteuer endete, wusste ${data.childName}: In jeder kleinen Idee kann ein großes Märchen stecken.`
-    );
+    setSavedData(storyInput);
+    setPreview(mockPreview);
   }
 
   return (
     <div className="mx-auto max-w-6xl">
       <div className="mb-10 text-center">
-        <Badge className="rounded-full px-4 py-2">
-          Märchen-Assistent
-        </Badge>
+        <Badge className="rounded-full px-4 py-2">Märchen-Assistent</Badge>
+
         <h1 className="mt-5 text-4xl font-extrabold tracking-tight md:text-5xl">
           Erstelle ein persönliches Märchen
         </h1>
+
         <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
-          Beantworte ein paar einfache Fragen. Danach zeigen wir dir eine
-          erste fiktive Vorschau deiner Geschichte.
+          Beantworte ein paar einfache Fragen. Danach zeigen wir dir eine erste
+          fiktive Vorschau deiner Geschichte.
         </p>
       </div>
 
@@ -365,14 +479,17 @@ Und als das Abenteuer endete, wusste ${data.childName}: In jeder kleinen Idee ka
           </CardHeader>
 
           <CardContent className="pt-6">
-            <form onSubmit={handleSubmit(generatePreview)} className="space-y-8">
+            <form
+              onSubmit={handleSubmit(handleGeneratePreview)}
+              className="space-y-8"
+            >
               {currentStep === 1 && (
                 <div className="grid gap-6">
                   <div className="grid gap-2">
                     <Label htmlFor="childName">Name des Kindes</Label>
                     <Input
                       id="childName"
-                      placeholder="Zum Beispiel: Emma, Leo, Mia"
+                      placeholder="Zum Beispiel: Emma, Leo, Mateo"
                       {...register("childName")}
                     />
                     {errors.childName && (
@@ -402,18 +519,20 @@ Und als das Abenteuer endete, wusste ${data.childName}: In jeder kleinen Idee ka
                     <RadioGroup
                       value={values.gender}
                       onValueChange={(value) =>
-                        setValue("gender", value, { shouldValidate: true })
+                        setValue("gender", value as ChildGender, {
+                          shouldValidate: true,
+                        })
                       }
                       className="grid gap-3 sm:grid-cols-2"
                     >
                       {genders.map((gender) => (
                         <Label
-                          key={gender.label}
-                          htmlFor={`gender-${gender.label}`}
+                          key={gender.value}
+                          htmlFor={`gender-${gender.value}`}
                           className="flex cursor-pointer items-center gap-3 rounded-2xl border bg-white p-4 transition hover:bg-orange-50"
                         >
                           <RadioGroupItem
-                            id={`gender-${gender.label}`}
+                            id={`gender-${gender.value}`}
                             value={gender.value}
                           />
                           <span>{gender.label}</span>
@@ -491,7 +610,9 @@ Und als das Abenteuer endete, wusste ${data.childName}: In jeder kleinen Idee ka
                   <RadioGroup
                     value={values.storyType}
                     onValueChange={(value) =>
-                      setValue("storyType", value, { shouldValidate: true })
+                      setValue("storyType", value as StoryTheme, {
+                        shouldValidate: true,
+                      })
                     }
                     className="grid gap-4 md:grid-cols-2"
                   >
@@ -544,7 +665,9 @@ Und als das Abenteuer endete, wusste ${data.childName}: In jeder kleinen Idee ka
                   <RadioGroup
                     value={values.moral}
                     onValueChange={(value) =>
-                      setValue("moral", value, { shouldValidate: true })
+                      setValue("moral", value as StoryMoral, {
+                        shouldValidate: true,
+                      })
                     }
                     className="grid gap-4 sm:grid-cols-2 md:grid-cols-3"
                   >
@@ -586,11 +709,13 @@ Und als das Abenteuer endete, wusste ${data.childName}: In jeder kleinen Idee ka
 
               {currentStep === 5 && (
                 <div className="grid gap-2">
-                  <Label htmlFor="dedication">Persönliche Widmung optional</Label>
+                  <Label htmlFor="dedication">
+                    Persönliche Widmung optional
+                  </Label>
                   <Textarea
                     id="dedication"
                     rows={7}
-                    placeholder="Zum Beispiel: Für meine kleine Abenteurerin Emma. Mögest du immer an deine Fantasie glauben."
+                    placeholder="Zum Beispiel: Für meinen kleinen Abenteurer. Mögest du immer an deine Fantasie glauben."
                     {...register("dedication")}
                   />
                   <p className="text-sm text-muted-foreground">
@@ -619,10 +744,16 @@ Und als das Abenteuer endete, wusste ${data.childName}: In jeder kleinen Idee ka
 
                   <div className="grid gap-4 md:grid-cols-2">
                     <SummaryItem label="Name" value={values.childName} />
-                    <SummaryItem label="Alter" value={`${values.childAge} Jahre`} />
+                    <SummaryItem
+                      label="Alter"
+                      value={`${values.childAge} Jahre`}
+                    />
                     <SummaryItem
                       label="Geschlecht"
-                      value={values.gender || "Keine Angabe"}
+                      value={
+                        genders.find((gender) => gender.value === values.gender)
+                          ?.label ?? "Keine Angabe"
+                      }
                     />
                     <SummaryItem label="Interessen" value={values.interests} />
                     <SummaryItem
@@ -639,18 +770,11 @@ Und als das Abenteuer endete, wusste ${data.childName}: In jeder kleinen Idee ka
                     />
                     <SummaryItem
                       label="Art des Märchens"
-                      value={
-                        storyTypes.find(
-                          (type) => type.value === values.storyType
-                        )?.label ?? "-"
-                      }
+                      value={getThemeLabel(values.storyType)}
                     />
                     <SummaryItem
                       label="Botschaft"
-                      value={
-                        morals.find((moral) => moral.value === values.moral)
-                          ?.label ?? "-"
-                      }
+                      value={getMoralLabel(values.moral)}
                     />
                     <SummaryItem
                       label="Widmung"
@@ -694,33 +818,70 @@ Und als das Abenteuer endete, wusste ${data.childName}: In jeder kleinen Idee ka
       </div>
 
       {preview && savedData && (
-        <Card className="mt-10 rounded-3xl border-orange-200 bg-white shadow-xl">
-          <CardHeader>
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div>
-                <Badge className="rounded-full">Fiktive Vorschau</Badge>
-                <CardTitle className="mt-3 text-3xl">
-                  {savedData.childName} und das besondere Abenteuer
-                </CardTitle>
-              </div>
+        <Card className="mt-10 overflow-hidden rounded-3xl border-orange-200 bg-white shadow-2xl">
+          <div className="bg-gradient-to-br from-orange-100 via-pink-100 to-blue-100 p-1">
+            <div className="rounded-[1.35rem] bg-white/90">
+              <CardHeader>
+                <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+                  <div>
+                    <Badge className="rounded-full">Fiktive Vorschau</Badge>
 
-              <Button variant="outline" className="rounded-full">
-                Später als PDF herunterladen
-              </Button>
-            </div>
-          </CardHeader>
+                    <CardTitle className="mt-4 text-3xl md:text-4xl">
+                      {preview.title}
+                    </CardTitle>
 
-          <CardContent>
-            <div className="rounded-3xl bg-gradient-to-br from-orange-50 via-pink-50 to-blue-50 p-6 leading-8 text-slate-700">
-              {preview.split("\n").map((paragraph, index) =>
-                paragraph.trim() ? (
-                  <p key={index} className="mb-4 last:mb-0">
-                    {paragraph}
-                  </p>
-                ) : null
-              )}
+                    <p className="mt-3 max-w-2xl text-muted-foreground">
+                      {preview.shortDescription}
+                    </p>
+                  </div>
+
+                  <Button className="rounded-full">
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    Continuar al pago
+                  </Button>
+                </div>
+              </CardHeader>
+
+              <CardContent>
+                <div className="rounded-3xl border bg-gradient-to-br from-orange-50 via-white to-blue-50 p-6 leading-8 text-slate-700">
+                  {preview.previewText.split("\n").map((paragraph, index) =>
+                    paragraph.trim() ? (
+                      <p key={index} className="mb-4 last:mb-0">
+                        {paragraph}
+                      </p>
+                    ) : null
+                  )}
+                </div>
+
+                <div className="mt-6 grid gap-4 md:grid-cols-3">
+                  <div className="rounded-2xl bg-orange-50 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Kind
+                    </p>
+                    <p className="mt-1 font-bold">{savedData.child.name}</p>
+                  </div>
+
+                  <div className="rounded-2xl bg-blue-50 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Thema
+                    </p>
+                    <p className="mt-1 font-bold">
+                      {getThemeLabel(savedData.theme)}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl bg-pink-50 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Botschaft
+                    </p>
+                    <p className="mt-1 font-bold">
+                      {getMoralLabel(savedData.moral)}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
             </div>
-          </CardContent>
+          </div>
         </Card>
       )}
     </div>

@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 
 import { Story } from "@/types/story";
 import { Badge } from "@/components/ui/badge";
@@ -17,9 +17,20 @@ type StoryCardProps = {
 
 const statusLabels: Record<Story["status"], string> = {
   draft: "Entwurf",
-  preview: "Vorschau",
+  preview_generated: "Vorschau erstellt",
   paid: "Bezahlt",
-  completed: "Fertig",
+  generating: "Wird erstellt",
+  ready: "Fertig",
+  failed: "Fehlgeschlagen",
+};
+
+const themeLabels: Record<Story["theme"], string> = {
+  space_adventure: "Weltraumabenteuer",
+  magical_animals: "Magische Tiere",
+  superhero: "Superheld",
+  birthday: "Geburtstag",
+  bedtime: "Ruhig einschlafen",
+  courage: "Mutig werden",
 };
 
 export function StoryCard({ story }: StoryCardProps) {
@@ -33,10 +44,10 @@ export function StoryCard({ story }: StoryCardProps) {
       </CardHeader>
 
       <CardContent className="text-sm text-muted-foreground">
-        <p>Kind: {story.childName}</p>
-        <p>Alter: {story.childAge}</p>
-        <p>Sprache: Deutsch</p>
-        <p>Thema: {story.theme}</p>
+        <p>Kind: {story.child.name}</p>
+        <p>Alter: {story.child.age}</p>
+        <p>Thema: {themeLabels[story.theme]}</p>
+        <p>Lieblingstier: {story.child.favoriteAnimal}</p>
       </CardContent>
 
       <CardFooter>

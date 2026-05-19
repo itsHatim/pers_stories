@@ -1,26 +1,54 @@
-﻿import { StoryCard } from "@/components/dashboard/story-card";
+import { StoryCard } from "@/components/dashboard/story-card";
 import { Story } from "@/types/story";
 
 const stories: Story[] = [
   {
     id: "1",
+    userId: "demo-user",
     title: "Emma und der Mondgarten",
-    childName: "Emma",
-    childAge: 6,
-    language: "de",
-    theme: "Traumreise",
-    status: "preview",
+    child: {
+      name: "Emma",
+      age: 6,
+      gender: "girl",
+      interests: "Malen, Sterne und kleine Abenteuer",
+      favoriteAnimal: "Fuchs",
+      favoriteColor: "Lila",
+      favoriteHobby: "Zeichnen",
+    },
+    theme: "bedtime",
+    moral: "creativity",
+    dedication: "Für Emma, die immer an ihre Fantasie glauben soll.",
+    previewText:
+      "Emma entdeckte eines Abends einen kleinen Mondgarten hinter ihrem Fenster...",
+    fullText: null,
+    status: "preview_generated",
+    pdfUrl: null,
     createdAt: "2026-05-18",
+    updatedAt: "2026-05-18",
   },
   {
     id: "2",
+    userId: "demo-user",
     title: "Leo und die sprechenden Füchse",
-    childName: "Leo",
-    childAge: 5,
-    language: "de",
-    theme: "Magische Tiere",
-    status: "completed",
+    child: {
+      name: "Leo",
+      age: 5,
+      gender: "boy",
+      interests: "Tiere, Wald und Geschichten",
+      favoriteAnimal: "Fuchs",
+      favoriteColor: "Blau",
+      favoriteHobby: "Bauen",
+    },
+    theme: "magical_animals",
+    moral: "friendship",
+    dedication: null,
+    previewText:
+      "Leo folgte einem freundlichen Fuchs in einen Wald voller kleiner Wunder...",
+    fullText: null,
+    status: "ready",
+    pdfUrl: "/demo/leo-fuchs.pdf",
     createdAt: "2026-05-18",
+    updatedAt: "2026-05-18",
   },
 ];
 
