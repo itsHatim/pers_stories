@@ -1,9 +1,10 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { Nunito } from "next/font/google";
 import "./globals.css";
 
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
+import { getCurrentLanguage } from "@/lib/i18n-server";
 
 const nunito = Nunito({
   subsets: ["latin"],
@@ -17,17 +18,19 @@ export const metadata: Metadata = {
     "Erstelle personalisierte Kindergeschichten, in denen dein Kind die Hauptrolle spielt.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const language = await getCurrentLanguage();
+
   return (
-    <html lang="de">
+    <html lang={language}>
       <body className={`${nunito.variable} font-sans`}>
-        <SiteHeader />
+        <SiteHeader language={language} />
         <main className="min-h-screen">{children}</main>
-        <SiteFooter />
+        <SiteFooter language={language} />
       </body>
     </html>
   );

@@ -1,4 +1,6 @@
 import { StoryCard } from "@/components/dashboard/story-card";
+import { type Language } from "@/lib/i18n";
+import { getCurrentLanguage } from "@/lib/i18n-server";
 import { Story } from "@/types/story";
 
 const stories: Story[] = [
@@ -52,17 +54,33 @@ const stories: Story[] = [
   },
 ];
 
-export default function StoriesPage() {
+const copy = {
+  en: {
+    title: "My stories",
+    intro: "All stories for the signed-in user will appear here later.",
+  },
+  de: {
+    title: "Meine Märchen",
+    intro: "Hier erscheinen später alle Märchen des angemeldeten Nutzers.",
+  },
+  es: {
+    title: "Mis cuentos",
+    intro: "Aquí aparecerán más adelante todos los cuentos del usuario conectado.",
+  },
+} satisfies Record<Language, { title: string; intro: string }>;
+
+export default async function StoriesPage() {
+  const language = await getCurrentLanguage();
+  const t = copy[language];
+
   return (
     <section className="mx-auto max-w-6xl px-4 py-16">
-      <h1 className="text-4xl font-bold tracking-tight">Meine Märchen</h1>
-      <p className="mt-2 text-muted-foreground">
-        Hier erscheinen später alle Märchen des angemeldeten Nutzers.
-      </p>
+      <h1 className="text-4xl font-bold tracking-tight">{t.title}</h1>
+      <p className="mt-2 text-muted-foreground">{t.intro}</p>
 
       <div className="mt-10 grid gap-6 md:grid-cols-2">
         {stories.map((story) => (
-          <StoryCard key={story.id} story={story} />
+          <StoryCard key={story.id} story={story} language={language} />
         ))}
       </div>
     </section>
