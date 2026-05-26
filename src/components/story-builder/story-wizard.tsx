@@ -216,6 +216,8 @@ const copy = {
       generate: "Vorschau generieren",
       generating: "Vorschau wird generiert...",
       download: "Später als PDF herunterladen",
+      fallbackNotice:
+        "Die KI-Verbindung ist noch nicht aktiv. Es wird eine lokale Beispielvorschau angezeigt.",
     },
     previewBadge: "Fiktive Vorschau",
     previewTitle: (name: string) => `${name} und das besondere Abenteuer`,
@@ -387,6 +389,8 @@ Und als das Abenteuer endete, wusste ${data.childName}: In jeder kleinen Idee ka
       generate: "Generate preview",
       generating: "Generating preview...",
       download: "Download as PDF later",
+      fallbackNotice:
+        "The AI connection is not active yet. A local sample preview is shown instead.",
     },
     previewBadge: "Fictional preview",
     previewTitle: (name: string) => `${name} and the special adventure`,
@@ -560,6 +564,8 @@ And when the adventure ended, ${data.childName} knew: every little idea can hold
       generate: "Generar vista previa",
       generating: "Generando vista previa...",
       download: "Descargar como PDF más tarde",
+      fallbackNotice:
+        "La conexión con la IA todavía no está activa. Se muestra una vista previa local de ejemplo.",
     },
     previewBadge: "Vista previa ficticia",
     previewTitle: (name: string) => `${name} y la aventura especial`,
@@ -702,6 +708,7 @@ export function StoryWizard({
   const [preview, setPreview] = useState<string | null>(null);
   const [savedData, setSavedData] = useState<StoryFormValues | null>(null);
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
+  const [usedFallbackPreview, setUsedFallbackPreview] = useState(false);
 
   const t = copy[language];
   const storySchema = useMemo(() => createStorySchema(language), [language]);
@@ -757,17 +764,20 @@ export function StoryWizard({
     }
 
     setPreview(null);
+    setUsedFallbackPreview(false);
     setCurrentStep((step) => Math.min(step + 1, t.steps.length));
   }
 
   function goBack() {
     setPreview(null);
+    setUsedFallbackPreview(false);
     setCurrentStep((step) => Math.max(step - 1, 1));
   }
 
   function changeLanguage(nextLanguage: Language) {
     setLanguage(nextLanguage);
     setPreview(null);
+    setUsedFallbackPreview(false);
   }
 
   function createFallbackPreview(
@@ -787,6 +797,7 @@ ${t.preview.body(data, storyTypeLabel, moralLabel)}`;
   async function generatePreview(data: StoryFormValues) {
     setSavedData(data);
     setIsGeneratingPreview(true);
+    setUsedFallbackPreview(false);
 
     const storyTypeLabel =
       storyTypes.find((type) => type.value === data.storyType)?.label ??
@@ -815,11 +826,16 @@ ${t.preview.body(data, storyTypeLabel, moralLabel)}`;
       }
 
       const result = (await response.json()) as { story?: string };
-      setPreview(
-        result.story?.trim() ||
-          createFallbackPreview(data, storyTypeLabel, moralLabel)
-      );
+      const generatedStory = result.story?.trim();
+
+      if (generatedStory) {
+        setPreview(generatedStory);
+      } else {
+        setUsedFallbackPreview(true);
+        setPreview(createFallbackPreview(data, storyTypeLabel, moralLabel));
+      }
     } catch {
+      setUsedFallbackPreview(true);
       setPreview(createFallbackPreview(data, storyTypeLabel, moralLabel));
     } finally {
       setIsGeneratingPreview(false);
@@ -1297,6 +1313,12 @@ ${t.preview.body(data, storyTypeLabel, moralLabel)}`;
           </CardHeader>
 
           <CardContent>
+            {usedFallbackPreview && (
+              <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                {t.buttons.fallbackNotice}
+              </div>
+            )}
+
             <div className="rounded-3xl bg-gradient-to-br from-orange-50 via-pink-50 to-blue-50 p-6 leading-8 text-slate-700">
               {preview.split("\n").map((paragraph, index) =>
                 paragraph.trim() ? (

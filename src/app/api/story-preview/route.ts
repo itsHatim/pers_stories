@@ -39,17 +39,18 @@ const languageNames = {
   es: "Spanish",
 };
 
-const instructions = `You create warm, age-appropriate fictional previews for personalized children's fairy tales.
+const instructions = `You create warm, age-appropriate fictional children's stories from personalization details.
 
 Rules:
-- Write only the story preview text, no title, no markdown, no explanations.
+- Write only the story text, no markdown and no explanations.
 - Keep it suitable for children ages 1 to 12.
 - Use gentle, imaginative language and a hopeful ending.
 - Include the child's name naturally several times.
 - Reflect the selected theme, moral, favorite animal, favorite color, hobby, and interests.
 - If a dedication is provided, weave it in as a short opening dedication before the story.
 - Avoid scary, violent, medical, political, religious, or adult content.
-- Keep the preview around 350 to 550 words.`;
+- Create a complete short story with a beginning, middle, and ending.
+- Keep it around 700 to 1000 words.`;
 
 function extractText(response: OpenAIResponse) {
   if (response.output_text) {
@@ -112,7 +113,7 @@ Story details:
       model,
       instructions,
       input,
-      max_output_tokens: 900,
+      max_output_tokens: 1800,
     }),
   });
 

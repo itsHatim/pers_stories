@@ -7,34 +7,48 @@ type SiteFooterProps = {
   language: Language;
 };
 
+type FooterLink = {
+  href: string;
+  label: string;
+};
+
+function FooterLinks({ links }: { links: FooterLink[] }) {
+  return (
+    <div className="mt-4 flex flex-col gap-3">
+      {links.map((link) => (
+        <Link
+          key={`${link.href}-${link.label}`}
+          href={link.href}
+          className="text-sm font-medium leading-5 text-muted-foreground transition hover:text-foreground"
+        >
+          {link.label}
+        </Link>
+      ))}
+    </div>
+  );
+}
+
 export function SiteFooter({ language = DEFAULT_LANGUAGE }: SiteFooterProps) {
-  const t = siteCopy[language];
+  const t = siteCopy[language].footer;
 
   return (
-    <footer className="border-t bg-muted/30">
-      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 md:grid-cols-4">
-        <div className="md:col-span-2">
-          <h2 className="text-lg font-semibold">{APP_NAME}</h2>
-          <p className="mt-2 max-w-md text-sm text-muted-foreground">
-            {t.footer.description}
-          </p>
+    <footer className="border-t bg-white text-foreground">
+      <div className="mx-auto grid max-w-7xl gap-10 px-6 py-10 md:grid-cols-[1.05fr_1fr_0.95fr] md:gap-0">
+        <div className="md:border-r md:border-border md:pr-10">
+          <h2 className="text-base font-extrabold">{t.world}</h2>
+          <FooterLinks links={t.products} />
         </div>
 
-        <div>
-          <h3 className="text-sm font-semibold">{t.footer.product}</h3>
-          <div className="mt-3 flex flex-col gap-2 text-sm text-muted-foreground">
-            <Link href="/pricing">{t.nav[1].label}</Link>
-            <Link href="/examples">{t.nav[2].label}</Link>
-            <Link href="/faq">{t.nav[3].label}</Link>
-          </div>
+        <div className="md:border-r md:border-border md:px-10 md:pt-9">
+          <FooterLinks links={t.storyLinks} />
         </div>
 
-        <div>
-          <h3 className="text-sm font-semibold">{t.footer.legal}</h3>
-          <div className="mt-3 flex flex-col gap-2 text-sm text-muted-foreground">
-            <Link href="/privacy">{t.footer.privacy}</Link>
-            <Link href="/terms">{t.footer.terms}</Link>
-          </div>
+        <div className="md:pl-10">
+          <h2 className="text-base font-extrabold">{t.support}</h2>
+          <FooterLinks links={t.supportLinks} />
+
+          <p className="mt-12 text-base font-extrabold">© {APP_NAME} AG</p>
+          <FooterLinks links={t.companyLinks} />
         </div>
       </div>
     </footer>
